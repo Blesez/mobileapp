@@ -1,0 +1,265 @@
+
+import 'dart:async';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:provider/provider.dart';
+import 'package:water_monitoring_app/tankControl.dart';
+import 'package:web_socket_channel/io.dart';
+import 'package:web_socket_channel/web_socket_channel.dart';
+import 'package:flutter/material.dart';
+import 'package:water_monitoring_app/array.dart';
+import 'package:water_monitoring_app/main.dart';
+import 'package:water_monitoring_app/progressIndicator.dart';
+import 'package:water_monitoring_app/Screens/TankSize_screen.dart';
+import 'dart:convert';
+import '../TankArrangement.dart';
+
+
+ //= int.parse(NumInput.text);
+
+class HomeScreen extends StatefulWidget {
+  final WebSocketChannel channel;
+  const HomeScreen({required this.channel,super.key});
+
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+class _HomeScreenState extends State<HomeScreen> {
+TextEditingController _NumInput = TextEditingController();
+
+ int? _NumOfTank;
+
+ @override
+
+ void initState(){
+  super.initState();
+  _NumInput.addListener(() {
+    setState((){
+      try{
+        _NumOfTank = int.parse(_NumInput.text);
+      } on FormatException {
+        _NumOfTank = null;
+      }
+    });
+  });
+ }
+  @override
+  Widget build(BuildContext context) {
+    
+return Scaffold(
+    appBar: AppBar(
+      title: Text('Welcome'.toUpperCase()),
+      centerTitle: true,
+      ),
+        drawer: Drawer(
+            
+            child: ListView(
+              children: [
+                DrawerHeader(
+                  padding: const EdgeInsets.all(0),
+                  child: Container(
+                    color: Colors.blue.shade300,
+                    child: Text("Settings".toUpperCase()),
+                    ),
+                    ),
+                      ExpansionTile(
+                        title: const Text('Tanks Available'), 
+                        children: [
+                            Padding(
+                              padding: const EdgeInsets.all(15),
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  TextFormField(
+                                   controller: _NumInput,
+                                   keyboardType: TextInputType.number,
+                                   decoration: const InputDecoration( 
+                                    border: OutlineInputBorder(), ) ,
+                                    
+                                  ),
+                                const SizedBox(width: 10,),
+                                                    
+                                ]                 
+                              ),
+                            ),
+                          ]
+                      ),
+        
+              ],
+            ),
+          ),
+       
+  
+    body: Container(
+      decoration: const BoxDecoration(
+        image: DecorationImage(
+          image: AssetImage("images/waterbg.jpg"),
+          fit: BoxFit.cover,
+          )
+      ),
+      child:   Padding(
+        padding: const EdgeInsets.all(40),
+        child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                                Expanded(
+                                  flex: 3,
+                                  child: TanksArrangement(channel: widget.channel,)
+                                  ),
+                                const SizedBox(height: 20,),
+                                MyButton(channel: widget.channel),
+                              ],
+                              ),
+      ),
+                      ),
+      ); 
+      
+  }
+ updateNumOfTank(){
+                                  var myMapNumOfTank = {
+                    'sender' : 'App',
+                    'NumOfTank' : _NumInput,
+                
+  };
+  widget.channel.sink.add(myMapNumOfTank);
+ }
+ }
+
+class MyButton extends StatefulWidget {
+  final WebSocketChannel channel;
+  const MyButton({
+    required this.channel,
+    Key? key}) : super(key: key);
+
+  @override
+  State<MyButton> createState() => _MyButtonState();
+}
+
+class _MyButtonState extends State<MyButton> {
+  late MyData myData;
+  late StreamController<MyData> _streamController;
+ @override
+ void initState(){
+  super.initState();
+  myData = MyData(numOfTank: 0, tankValues: List.empty(), pumpState: '');
+  _streamController = StreamController<MyData>.broadcast();
+  updateMyData();
+ }
+
+ @override
+ void dispose(){
+  _streamController.close();
+  super.dispose();
+ }
+ void updateMyData(){
+  _streamController.sink.add(myData);
+ }
+ 
+bool isButtonClicked = false;
+Color buttoncolor = Colors.grey;
+Text icontext = const Text("Turn pump on");
+
+
+void togglebuttoncolor(){
+  setState(() {
+    myData = myData.updatePumpState(isButtonClicked ? 'off' : 'on' );
+   isButtonClicked = !isButtonClicked;
+   buttoncolor = isButtonClicked? Colors.green : Colors.grey;
+   icontext = isButtonClicked? const Text("Pumping") : const Text("Turn \n pump on");
+});
+ var messagetoserver = {
+          'sender': 'App',
+          'PumpState': myData.pumpState,
+       };
+      widget.channel.sink.add(messagetoserver);
+}
+
+ @override
+  Widget build(BuildContext context) {
+ 
+  final pump = myData.pumpState;
+
+Map<String, Function> actions ={
+  'off':() => ElevatedButton(
+    onPressed: togglebuttoncolor,
+      style: ButtonStyle(
+        fixedSize: const MaterialStatePropertyAll(Size.fromRadius(100)),
+        backgroundColor: MaterialStatePropertyAll(buttoncolor),
+        elevation: const MaterialStatePropertyAll(50),
+        shape: const MaterialStatePropertyAll(
+          CircleBorder(
+            side:BorderSide(width: 10.0, color: Colors.white60,) ))
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(
+            FontAwesomeIcons.gasPump,
+          ),
+          icontext,
+        ],
+      ),
+   ),
+
+ 'on':(){ElevatedButton(
+    onPressed: togglebuttoncolor,
+      style: ButtonStyle(
+        fixedSize: const MaterialStatePropertyAll(Size.fromRadius(100)),
+        backgroundColor: MaterialStatePropertyAll(buttoncolor),
+        elevation: const MaterialStatePropertyAll(50),
+        shape: const MaterialStatePropertyAll(
+          CircleBorder(
+            side:BorderSide(width: 10.0, color: Colors.white60,) ))
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(
+            FontAwesomeIcons.gasPump,
+            size: BorderSide.strokeAlignInside,
+            color: Colors.white60,
+          ),
+          icontext,
+        ],
+      ),
+ );
+}
+};
+
+final buttonDisplayed = actions[pump]?.call() ??  ElevatedButton(
+    onPressed: (){},
+      style: ButtonStyle(
+        fixedSize: const MaterialStatePropertyAll(Size.fromRadius(100)),
+        backgroundColor: MaterialStatePropertyAll(buttoncolor),
+        elevation: const MaterialStatePropertyAll(30),
+        shape: const MaterialStatePropertyAll(
+          CircleBorder(
+            side:BorderSide(width: 10.0, color: Colors.white,) ))
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: const [
+          Icon(
+            FontAwesomeIcons.gasPump,
+            size: BorderSide.strokeAlignInside,
+            color: Colors.white60,
+          ),
+         Text('pump status \n unknown'),
+        ],
+      ),
+      );
+
+      return Container(
+        child: buttonDisplayed,
+    );
+  
+}
+    
+  }
+  
+
+ 
+
+
+
+   
