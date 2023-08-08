@@ -10,7 +10,7 @@ import 'dart:io';
 void main(){runApp(
   const MyApp());
 }
-const url = 'wss://72daer0qkc.execute-api.us-east-1.amazonaws.com/beta?token:App';
+const url = 'https://blesezwaterproj.onrender.com?token:App';
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
@@ -48,7 +48,7 @@ class MyApp extends StatelessWidget {
 
  Future<WebSocketChannel> connectToWS(BuildContext context) async {
   try {
-    final channel = IOWebSocketChannel(await WebSocket.connect('$url:42686'));
+    final channel = IOWebSocketChannel(await WebSocket.connect('$url:10000'));
     // websocket connection successful, handle further actions here
     return channel;
   } on SocketException catch (e) {
