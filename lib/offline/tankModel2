@@ -1,28 +1,26 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:water_monitoring_app/progressIndicator.dart';
-import 'package:web_socket_channel/web_socket_channel.dart';
 import 'Screens/TankSize_screen.dart';
 import 'tankControl.dart';
 
-class TankModel extends StatefulWidget{
-final WebSocketChannel channel;
+class TankModel2 extends StatefulWidget{
     final Color? colour;
    // final Widget? liquidProgress;
     final int index;
     final double value;
-    const TankModel( {super.key, 
+    const TankModel2( {super.key, 
       this.colour,
       required this.value,
-      required this.channel,
      // @required this.liquidProgress,
       required this.index,      
     });
 
   @override
-  State<TankModel> createState() => _TankModelState();
+  State<TankModel2> createState() => _TankModel2State();
 }
 
-class _TankModelState extends State<TankModel> {
+class _TankModel2State extends State<TankModel2> {
   bool isToggled = false;
     @override
   Widget build(BuildContext context) {
@@ -39,7 +37,7 @@ class _TankModelState extends State<TankModel> {
                     child:LiquidProgress(
                       value: widget.value, 
                       direction: Axis.vertical, 
-                      backgroundColor: const Color.fromARGB(255, 7, 46, 77)),
+                      backgroundColor: Color.fromARGB(255, 7, 46, 77)),
                   
                   onLongPress: () {
                     showModalBottomSheet(
@@ -72,14 +70,14 @@ class _TankModelState extends State<TankModel> {
         'sender': 'App',
         'Tank_index': widget.index,
         'TankState': 1
-      }; widget.channel.sink.add(tankStateByUser);
+      };
 
                                 } else {
         var tankStateByUser = {
         'sender': 'App',
         'Tank_index': widget.index,
         'TankState': 0
-      }; widget.channel.sink.add(tankStateByUser);
+      }; 
 
               LiquidProgress(
                       value: 0.5, 

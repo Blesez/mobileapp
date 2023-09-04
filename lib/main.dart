@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'Screens/Home_screen.dart';
 import 'package:web_socket_channel/io.dart';
 import 'Messages.dart';
+import 'offline/homeScreen2';
 import 'package:web_socket_channel/web_socket_channel.dart';
 import 'dart:io';
 
@@ -10,7 +11,7 @@ import 'dart:io';
 void main(){runApp(
   const MyApp());
 }
-const url = 'https://blesezwaterproj.onrender.com?token:App';
+const url = 'wss://blesezwaterproj.onrender.com?token:App';
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
@@ -34,11 +35,8 @@ class MyApp extends StatelessWidget {
                 ),
               );
             } else {
-              return const Scaffold(
-                body: Center(
-                  child: CircularProgressIndicator(),
-                ),
-              );
+              return const HomeScreen2();
+             
             }
           },
         ),
@@ -48,7 +46,7 @@ class MyApp extends StatelessWidget {
 
  Future<WebSocketChannel> connectToWS(BuildContext context) async {
   try {
-    final channel = IOWebSocketChannel(await WebSocket.connect('$url:10000'));
+    final channel = IOWebSocketChannel(await WebSocket.connect(url));
     // websocket connection successful, handle further actions here
     return channel;
   } on SocketException catch (e) {
