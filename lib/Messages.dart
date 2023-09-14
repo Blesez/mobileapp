@@ -1,5 +1,5 @@
-import 'package:water_monitoring_app/tankControl.dart';
-import 'package:web_socket_channel/web_socket_channel.dart';
+import 'package:h20_bender/tankControl.dart';
+import 'package:socket_io_client/socket_io_client.dart' as IO;
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'dart:convert';
@@ -7,7 +7,7 @@ import 'dart:convert';
 
 
 class Messages extends StatefulWidget {
-  final WebSocketChannel channel;
+  final IO.Socket channel;
   const Messages({required this.channel, super.key, });
 
   @override
@@ -23,12 +23,11 @@ class _MessagesState extends State<Messages> {
     super.initState();
     myData = MyData(numOfTank: 0, tankValues: List.empty(), pumpState: '');
     _streamController = StreamController<MyData>.broadcast();
-    widget.channel.stream.listen(
-      (data) {
+    widget.channel.on('sendToApp',(data) {
         try { 
       final message = jsonDecode(data);
       final List<double> tankValues = List <double>.from(message['val']);
-      final pumpState = message['pumpState'];
+      final pumpState = message['PumpState'];
 
       setState(() {
        myData = myData.updateTankValues(tankValues).updatePumpState(pumpState);
@@ -49,15 +48,14 @@ class _MessagesState extends State<Messages> {
           ),
         );
       }
-    },
-     onDone: (){
+    });
+     widget.channel.onDisconnect((_){
       debugPrint('ws channel closed');
-    },
-    );
+    });
    }
   @override
   void dispose(){
-    widget.channel.sink.close();
+    widget.channel.disconnect();
     _streamController.close();
     super.dispose();
   }
@@ -70,7 +68,7 @@ class _MessagesState extends State<Messages> {
             if(snapshot.hasData){
               final myData = snapshot.data!;
               int numOfTank = myData.numOfTank;
-              widget.channel.sink.add(numOfTank);
+              widget.channel.emit('message',numOfTank);
               
               } 
               throw Exception("cant create widget");

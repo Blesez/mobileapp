@@ -1,6 +1,5 @@
 // ignore_for_file: non_constant_identifier_names
 
-import 'package:flutter/material.dart';
 
  class MyData{
   int numOfTank = 0;
@@ -15,24 +14,24 @@ required this.pumpState,
   MyData updateNumOfTank(int numOfTank){
     return MyData(
       numOfTank: numOfTank,
-      pumpState: this.pumpState,
-      tankValues: this.tankValues,
+      pumpState: pumpState,
+      tankValues: tankValues,
     );
   }
 
    MyData updateTankValues(List <double> tankValues){
     return MyData(
-      numOfTank: this.numOfTank,
-      pumpState: this.pumpState,
+      numOfTank: numOfTank,
+      pumpState: pumpState,
       tankValues: tankValues,
     );
   }
 
     MyData updatePumpState(String pumpState){
     return MyData(
-      numOfTank: this.numOfTank,
+      numOfTank: numOfTank,
       pumpState: pumpState,
-      tankValues: this.tankValues,
+      tankValues: tankValues,
     );
   }
 }
